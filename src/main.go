@@ -19,6 +19,7 @@ func test(port string) {
 	connection, error := net.Dial("tcp", "localhost:"+port)
 	if error != nil {
 		fmt.Println(error)
+		return
 	}
 
 	for {
@@ -49,7 +50,7 @@ func main() {
 		go startServer(args[1])
 
 		for {
-			test(args[1])
+		test(args[1])
 		}
 	} else {
 		fmt.Println("Pass a port as parameter. Try again.")

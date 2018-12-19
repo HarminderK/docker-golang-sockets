@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"net"
 )
@@ -16,7 +15,14 @@ type chat struct {
 
 type chatRooms struct {
 	// Chat ID -> chat
-	chats map[string]chat
+	chats     map[string]chat
+	handShake map[string]bool
+}
+
+// Message struct
+type Message struct {
+	// Name, Chatid, AuthToken, Text string
+	Name, Chatid, Text string
 }
 
 func (rooms *chatRooms) handleConn(conn net.Conn) {
@@ -27,26 +33,21 @@ func (rooms *chatRooms) handleConn(conn net.Conn) {
 	if err != nil {
 		return
 	}
+	fmt.Println("SENT: " + string(message))
 
-	if length > 0 {
-		fmt.Println("SENT: " + string(message))
+	var m Message
+	err := json.Unmarshal(message, &m)
 
-		type Message struct {
-			// Name, Chatid, AuthToken, Text string
-			Name, Chatid, Text string
-		}
-		var m Message
-		err := json.Unmarshal(message, &m)
+	if err != nil {
+		fmt.println(err)
+	}
 
-		if err != nil {
-			return
-		}
+	if err != nil && length > 0 {
 
 		i, ok := rooms.chats[m.Chatid]
 
 		if ok {
-
-			for index, user := range i.users {
+			for _, user := range i.users {
 				if user == m.Name {
 					i.clients[user] = conn
 					continue
@@ -65,6 +66,8 @@ func (rooms *chatRooms) handleConn(conn net.Conn) {
 			return
 		}
 
+	} else {
+		conn.Write([]byte("World!"))
 	}
 
 }
@@ -99,7 +102,6 @@ func startServer(port string) {
 		if err != nil {
 			continue
 		}
-
 		go rooms.handleConn(conn)
 	}
 }
